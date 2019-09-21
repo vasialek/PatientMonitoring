@@ -40,6 +40,9 @@
 // include the library code:
 #include <LiquidCrystal.h>
 
+const int PikeLength = 3;
+const int MaxPikePosition = 5;
+
 struct PatientInfo {
   char name[17];
   int temperature;
@@ -259,43 +262,37 @@ void setup() {
 }
 
 void loop() {
-//  displayPatientScreen();
-//  delay(8000);
-//
-//  for (int i = 0; i < 10; i++) {
-//      _patient.dPulse = rand() % 5 - 2;
-//      displayTemperatureScreen();
-//      delay(1000);
-//  }
+  displayPatientScreen();
+  delay(8000);
 
-//  for (int i = 10; i >= 0; i--) {
-//    drawHighPikeAt(i);
-//    drawSmallPikeAt(i+4);
-//    delay(1000);
-//  }
-//  lcd.clear();
-  for (int i = 0; i < 13; i+= 3) {
-    drawPikePeriod(i);
-    if (i > 8) {
-      clearPikePeriod(i-9);
-    } else if (i < 4) {
-      clearPikePeriod(i + 9);
-    }
-    delay(500);
+  for (int i = 0; i < 10; i++) {
+      _patient.dPulse = rand() % 5 - 2;
+      displayTemperatureScreen();
+      delay(1000);
   }
-  lcd.clear();
+
+  for (byte pos = 0; pos < MaxPikePosition; pos++) {
+    drawPikePeriod(pos * PikeLength);
+
+    for (byte i = 0; i < 1; i++) {
+      int positionToClear = pos + 2;
+      if (positionToClear >= MaxPikePosition) {
+        clearPikePeriod(3 * (positionToClear - MaxPikePosition));
+      } else {
+        clearPikePeriod(3 * positionToClear);
+      }
+      delay(200);
+    }
+
+  }
 }
 
 void drawPikePeriod(int pos) {
   for (int d = 0; d < 3; d++) {
     lcd.setCursor(pos + d, 0);
     lcd.write(byte(d));
-    delay(300);
+    delay(200);
   }
-//    lcd.setCursor(pos, 0);
-//    lcd.write(byte(0));
-//    lcd.write(byte(1));
-//    lcd.write(byte(2));
 }
 
 void clearPikePeriod(int pos) {
