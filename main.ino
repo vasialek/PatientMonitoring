@@ -45,100 +45,17 @@ const int MaxPikePosition = 5;
 
 struct PatientInfo {
   char name[17];
-  int temperature;
+  float temperature;
   int pulse;
   int sys;
   int dia;
 
   // Deltas
-  int dTemperature;
+  float dTemperature;
   int dPulse;
   int dSys;
   int dDia;
 };
-
-/*
-byte symbol1[8] = {
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-};
-byte symbol2[8] = {
-  B00000,
-  B00001,
-  B00010,
-  B00100,
-  B00100,
-  B01000,
-  B10000,
-  B10000,
-};
-byte symbol3[8] = {
-  B10000,
-  B01000,
-  B00100,
-  B00100,
-  B00100,
-  B00010,
-  B00010,
-  B00010,
-};
-byte symbol4[8] = {
-  B00000,
-  B00000,
-  B00000,
-  B00001,
-  B00010,
-  B11100,
-  B00000,
-  B00000,
-};
-byte symbol5[8] = {
-  B00001,
-  B00010,
-  B00010,
-  B00100,
-  B00100,
-  B01000,
-  B01000,
-  B10000,
-};
-byte symbol6[8] = {
-  B00000,
-  B00000,
-  B00000,
-  B10000,
-  B01000,
-  B00111,
-  B00000,
-  B00000,
-};
-byte symbol7[8] = {
-  B00001,
-  B00001,
-  B00001,
-  B00001,
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-};
-byte symbol8[8] = {
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B10000,
-  B11111,
-  B00000,
-  B00000,
-};
-*/
 
 byte symbol1[8] = {
   B00000,
@@ -237,11 +154,9 @@ void setup() {
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
   lcd.clear();
-  // Print a message to the LCD.
-//  lcd.print("TEM 36.6 ");
 
-  sprintf(_patient.name, "Little Rat\0");
-  _patient.temperature = 38;
+  sprintf(_patient.name, "Green Frog\0");
+  _patient.temperature = 37.9;
   _patient.pulse = 100;
   _patient.sys = 122;
   _patient.dia = 77;
@@ -262,8 +177,9 @@ void setup() {
 }
 
 void loop() {
+  char buf[16];
   displayPatientScreen();
-  delay(8000);
+  delay(3000);
 
   for (int i = 0; i < 10; i++) {
       _patient.dPulse = rand() % 5 - 2;
@@ -271,19 +187,28 @@ void loop() {
       delay(1000);
   }
 
-  for (byte pos = 0; pos < MaxPikePosition; pos++) {
-    drawPikePeriod(pos * PikeLength);
-
-    for (byte i = 0; i < 1; i++) {
-      int positionToClear = pos + 2;
-      if (positionToClear >= MaxPikePosition) {
-        clearPikePeriod(3 * (positionToClear - MaxPikePosition));
-      } else {
-        clearPikePeriod(3 * positionToClear);
+  lcd.clear();
+  lcd.setCursor(0, 1);
+  lcd.print(_patient.name);
+  lcd.setCursor(10, 1);
+  sprintf(buf, "P:%3d\0", _patient.pulse + _patient.dPulse);
+  lcd.print(buf);
+  for (byte i = 0; i < 3; i++) {
+    for (byte pos = 0; pos < MaxPikePosition; pos++) {
+      drawPikePeriod(pos * PikeLength);
+  
+      for (byte i = 0; i < 1; i++) {
+        int positionToClear = pos + 2;
+        if (positionToClear >= MaxPikePosition) {
+          clearPikePeriod(3 * (positionToClear - MaxPikePosition));
+        } else {
+          clearPikePeriod(3 * positionToClear);
+        }
+        delay(200);
       }
-      delay(200);
+      
     }
-
+    delay(300);
   }
 }
 
@@ -326,12 +251,14 @@ void drawSmallPikeAt(int pos) {
 
 void displayTemperatureScreen() {
   char buf[17];
+  char str[8];
 
-  sprintf(buf, "SYS: %3d   T:%3d\0", _patient.sys, _patient.temperature);
+  dtostrf(_patient.temperature, 5, 2, str);
+  sprintf(buf, "SYS: %3d T:%s\0", _patient.sys, str);
   lcd.setCursor(0, 0);
   lcd.print(buf);
 
-  sprintf(buf, "DIA: %3d   P:%3d\0", _patient.dia, _patient.pulse + _patient.dPulse);
+  sprintf(buf, "DIA: %3d P:%5d\0", _patient.dia, _patient.pulse + _patient.dPulse);
   lcd.setCursor(0, 1);
   lcd.print(buf);
 }
