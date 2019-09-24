@@ -1,14 +1,4 @@
 /*
-  LiquidCrystal Library - Hello World
-
- Demonstrates the use a 16x2 LCD display.  The LiquidCrystal
- library works with all LCD displays that are compatible with the
- Hitachi HD44780 driver. There are many of them out there, and you
- can usually tell them by the 16-pin interface.
-
- This sketch prints "Hello World!" to the LCD
- and shows the time.
-
   The circuit:
  * LCD RS pin to digital pin 12
  * LCD Enable pin to digital pin 11
@@ -22,19 +12,6 @@
  * 10K resistor:
  * ends to +5V and ground
  * wiper to LCD VO pin (pin 3)
-
- Library originally added 18 Apr 2008
- by David A. Mellis
- library modified 5 Jul 2009
- by Limor Fried (http://www.ladyada.net)
- example added 9 Jul 2009
- by Tom Igoe
- modified 22 Nov 2010
- by Tom Igoe
-
- This example code is in the public domain.
-
- http://www.arduino.cc/en/Tutorial/LiquidCrystal
  */
 
 // include the library code:
@@ -55,6 +32,12 @@ struct PatientInfo {
   int dPulse;
   int dSys;
   int dDia;
+};
+
+PatientInfo patients[] = {
+  {"Green Frog", 37.3, 90, 132, 77},
+  {"Gray Rat", 36.6, 60, 115, 70},
+  {"Black Ferret", 38.1, 73, 128, 66},
 };
 
 byte symbol1[8] = {
@@ -145,7 +128,9 @@ byte symbol8[8] = {
   B00000,
 };
 
-PatientInfo _patient;
+PatientInfo *_patient;
+int _totalPatients = 0;
+int _currentPatientPos = 0;
 
 // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
@@ -155,16 +140,17 @@ void setup() {
   lcd.begin(16, 2);
   lcd.clear();
 
-  sprintf(_patient.name, "Green Frog\0");
-  _patient.temperature = 37.9;
-  _patient.pulse = 100;
-  _patient.sys = 122;
-  _patient.dia = 77;
+  _totalPatients = sizeof(patients) / sizeof(PatientInfo);
 
-  _patient.dTemperature = 0;
-  _patient.dPulse = 0;
-  _patient.dSys = 0;
-  _patient.dDia = 0;
+  Serial.begin(9600);
+  Serial.println("Starting...");
+  for (byte i = 0; i < 10; i++) {
+    _patient = &patients[_currentPatientPos];
+    Serial.println(_patient->name);
+    moveToNextPatient();
+  }
+  delay(30000);
+  
 
   lcd.createChar(0, symbol1);
   lcd.createChar(1, symbol2);
@@ -182,16 +168,16 @@ void loop() {
   delay(3000);
 
   for (int i = 0; i < 10; i++) {
-      _patient.dPulse = rand() % 5 - 2;
+      _patient->dPulse = rand() % 5 - 2;
       displayTemperatureScreen();
       delay(1000);
   }
 
   lcd.clear();
   lcd.setCursor(0, 1);
-  lcd.print(_patient.name);
+  lcd.print(_patient->name);
   lcd.setCursor(10, 1);
-  sprintf(buf, "P:%3d\0", _patient.pulse + _patient.dPulse);
+  sprintf(buf, "P:%3d\0", _patient->pulse + _patient->dPulse);
   lcd.print(buf);
   for (byte i = 0; i < 3; i++) {
     for (byte pos = 0; pos < MaxPikePosition; pos++) {
@@ -209,6 +195,15 @@ void loop() {
       
     }
     delay(300);
+  }
+}
+
+void moveToNextPatient() {
+  int pos = _currentPatientPos + 1;
+  if (pos >= _totalPatients) {
+    _currentPatientPos = 0;
+  } else {
+    _currentPatientPos = pos;
   }
 }
 
@@ -253,12 +248,12 @@ void displayTemperatureScreen() {
   char buf[17];
   char str[8];
 
-  dtostrf(_patient.temperature, 5, 2, str);
-  sprintf(buf, "SYS: %3d T:%s\0", _patient.sys, str);
+  dtostrf(_patient->temperature, 5, 2, str);
+  sprintf(buf, "SYS: %3d T:%s\0", _patient->sys, str);
   lcd.setCursor(0, 0);
   lcd.print(buf);
 
-  sprintf(buf, "DIA: %3d P:%5d\0", _patient.dia, _patient.pulse + _patient.dPulse);
+  sprintf(buf, "DIA: %3d P:%5d\0", _patient->dia, _patient->pulse + _patient->dPulse);
   lcd.setCursor(0, 1);
   lcd.print(buf);
 }
@@ -271,5 +266,5 @@ void displayPatientScreen() {
   lcd.print("Patient name:");
 
   lcd.setCursor(0, 1);
-  lcd.print(_patient.name);
+  lcd.print(_patient->name);
 }
