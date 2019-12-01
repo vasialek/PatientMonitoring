@@ -20,6 +20,8 @@
 const int PikeLength = 3;
 const int MaxPikePosition = 5;
 
+const int PinRotateButton = 8;
+
 struct PatientInfo {
   char name[17];
   float temperature;
@@ -143,6 +145,9 @@ void setup() {
 
   _totalPatients = sizeof(patients) / sizeof(PatientInfo);
   outputPatients();
+  _currentPatientPos = 0;
+
+  pinMode(PinRotateButton, INPUT_PULLUP);
 
   Serial.begin(9600);
   Serial.println("Starting...");  
@@ -157,48 +162,58 @@ void setup() {
   lcd.createChar(7, symbol8);
 }
 
+int _rotatePressedAt = 0;
+
 void loop() {
   char buf[16];
 
-  Serial.print("current patient position: ");
-  Serial.println(_currentPatientPos);
-  _patient = &patients[_currentPatientPos];
-  Serial.println(_patient->name);
-
-  displayPatientScreen();
-  delay(3000);
-
-  for (int i = 0; i < 10; i++) {
-      _patient->dPulse = rand() % 5 - 2;
-      displayTemperatureScreen();
-      delay(1000);
-  }
-
-  lcd.clear();
-  lcd.setCursor(0, 1);
-  lcd.print(_patient->name);
-//  lcd.setCursor(10, 1);
-//  sprintf(buf, "P:%3d\0", _patient->pulse + _patient->dPulse);
-//  lcd.print(buf);
-  for (byte i = 0; i < 3; i++) {
-    for (byte pos = 0; pos < MaxPikePosition; pos++) {
-      drawPikePeriod(pos * PikeLength);
-  
-      for (byte i = 0; i < 1; i++) {
-        int positionToClear = pos + 2;
-        if (positionToClear >= MaxPikePosition) {
-          clearPikePeriod(3 * (positionToClear - MaxPikePosition));
-        } else {
-          clearPikePeriod(3 * positionToClear);
-        }
-        delay(200);
-      }
-      
+  if (digitalRead(PinRotateButton) == LOW) {
+    if (millis() - _rotatePressedAt > 200) {
+      Serial.println("Pressed...");
+      moveToNextPatient();
+      Serial.println(_currentPatientPos);
+      _rotatePressedAt = millis();
+      displayPatientScreen();
     }
-    delay(300);
   }
 
-  moveToNextPatient();
+//  Serial.print("current patient position: ");
+//  Serial.println(_currentPatientPos);
+//  _patient = &patients[_currentPatientPos];
+//  Serial.println(_patient->name);
+//
+//  displayPatientScreen();
+//  delay(3000);
+//
+//  for (int i = 0; i < 10; i++) {
+//      _patient->dPulse = rand() % 5 - 2;
+//      displayTemperatureScreen();
+//      delay(1000);
+//  }
+//
+//  lcd.clear();
+//  lcd.setCursor(0, 1);
+//  lcd.print(_patient->name);
+//  for (byte i = 0; i < 3; i++) {
+//    for (byte pos = 0; pos < MaxPikePosition; pos++) {
+//      drawPikePeriod(pos * PikeLength);
+//  
+//      for (byte i = 0; i < 1; i++) {
+//        int positionToClear = pos + 2;
+//        if (positionToClear >= MaxPikePosition) {
+//          clearPikePeriod(3 * (positionToClear - MaxPikePosition));
+//        } else {
+//          clearPikePeriod(3 * positionToClear);
+//        }
+//        delay(200);
+//      }
+//      
+//    }
+//    delay(300);
+//  }
+//
+//  moveToNextPatient();
+  delay(100);
 }
 
 void moveToNextPatient() {
@@ -208,6 +223,12 @@ void moveToNextPatient() {
   } else {
     _currentPatientPos = pos;
   }
+
+  _patient = &patients[_currentPatientPos];
+  Serial.print("Current patient #");
+  Serial.print(_currentPatientPos);
+  Serial.print(": ");
+  Serial.println(_patient->name);
 }
 
 void drawPikePeriod(int pos) {
@@ -274,7 +295,6 @@ void displayPatientScreen() {
 
 void outputPatients() {
   for (byte i = 0; i < _totalPatients; i++) {
-    _patient = &patients[_currentPatientPos];
     Serial.println(_patient->name);
     moveToNextPatient();
   }
