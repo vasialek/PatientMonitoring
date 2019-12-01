@@ -142,6 +142,7 @@ void setup() {
   lcd.clear();
 
   _totalPatients = sizeof(patients) / sizeof(PatientInfo);
+  outputPatients();
 
   Serial.begin(9600);
   Serial.println("Starting...");  
@@ -269,4 +270,12 @@ void displayPatientScreen() {
 
   lcd.setCursor(0, 1);
   lcd.print(_patient->name);
+}
+
+void outputPatients() {
+  for (byte i = 0; i < _totalPatients; i++) {
+    _patient = &patients[_currentPatientPos];
+    Serial.println(_patient->name);
+    moveToNextPatient();
+  }
 }
