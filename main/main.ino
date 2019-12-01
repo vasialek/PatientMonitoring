@@ -38,6 +38,7 @@ PatientInfo patients[] = {
   {"Green Frog", 37.3, 90, 132, 77},
   {"Gray Rat", 36.6, 60, 115, 70},
   {"Black Ferret", 38.1, 73, 128, 66},
+  {"Brown Turtle", 41.3, 40, 80, 30}
 };
 
 byte symbol1[8] = {
@@ -143,14 +144,7 @@ void setup() {
   _totalPatients = sizeof(patients) / sizeof(PatientInfo);
 
   Serial.begin(9600);
-  Serial.println("Starting...");
-  for (byte i = 0; i < 10; i++) {
-    _patient = &patients[_currentPatientPos];
-    Serial.println(_patient->name);
-    moveToNextPatient();
-  }
-  delay(30000);
-  
+  Serial.println("Starting...");  
 
   lcd.createChar(0, symbol1);
   lcd.createChar(1, symbol2);
@@ -164,6 +158,12 @@ void setup() {
 
 void loop() {
   char buf[16];
+
+  Serial.print("current patient position: ");
+  Serial.println(_currentPatientPos);
+  _patient = &patients[_currentPatientPos];
+  Serial.println(_patient->name);
+
   displayPatientScreen();
   delay(3000);
 
@@ -176,9 +176,9 @@ void loop() {
   lcd.clear();
   lcd.setCursor(0, 1);
   lcd.print(_patient->name);
-  lcd.setCursor(10, 1);
-  sprintf(buf, "P:%3d\0", _patient->pulse + _patient->dPulse);
-  lcd.print(buf);
+//  lcd.setCursor(10, 1);
+//  sprintf(buf, "P:%3d\0", _patient->pulse + _patient->dPulse);
+//  lcd.print(buf);
   for (byte i = 0; i < 3; i++) {
     for (byte pos = 0; pos < MaxPikePosition; pos++) {
       drawPikePeriod(pos * PikeLength);
@@ -196,6 +196,8 @@ void loop() {
     }
     delay(300);
   }
+
+  moveToNextPatient();
 }
 
 void moveToNextPatient() {
