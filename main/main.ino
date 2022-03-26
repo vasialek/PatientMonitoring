@@ -168,7 +168,7 @@ void loop() {
   char buf[16];
 
   if (digitalRead(PinRotateButton) == LOW) {
-    if (millis() - _rotatePressedAt > 200) {
+    if (millis() - _rotatePressedAt > 250) {
       Serial.println("Pressed...");
       moveToNextPatient();
       Serial.println(_currentPatientPos);
